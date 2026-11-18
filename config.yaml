@@ -1,0 +1,42 @@
+app:
+  host: 127.0.0.1
+  port: 8765
+  open_browser: true
+  # Leave empty to auto-detect Google Chrome.
+  chrome_path: ""
+
+crawl:
+  max_depth: 3
+  max_pages: 100
+  max_external_domains: 20
+  max_pages_per_external_domain: 6
+  request_delay: 1.0
+  download_timeout: 25
+  concurrent_requests: 4
+  user_agent: "UniversityResearchDiscoveryBot/1.0 (local academic research; respectful crawler)"
+  max_runtime_seconds: 1200
+  # JavaScript rendering is attempted only for pages that appear to need it,
+  # and only when Playwright + Chromium are installed.
+  use_playwright: true
+  playwright_timeout_ms: 25000
+
+ollama:
+  base_url: "http://127.0.0.1:11434"
+  model: "llama3.2:latest"
+  timeout_seconds: 300
+  temperature: 0.1
+  num_ctx: 8192
+  num_predict: 1100
+  keep_alive: "30m"
+  max_concurrent_requests: 2
+  cache_path: "cache/ai_cache.sqlite3"
+
+output:
+  directory: "outputs"
+
+database:
+  path: "data/scans.sqlite3"
+
+logging:
+  directory: "logs"
+  level: "INFO"

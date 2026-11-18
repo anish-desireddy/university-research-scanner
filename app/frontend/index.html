@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>University Research Discovery</title>
+  <meta name="description" content="Discover university faculty and undergraduate research opportunities with a local crawler and local AI.">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/" aria-label="University Research Discovery home">
+        <span class="brand-mark" aria-hidden="true">UR</span>
+        <span class="brand-text">
+          <span class="eyebrow">Local research intelligence</span>
+          <span class="brand-name">University Research Discovery</span>
+        </span>
+      </a>
+      <div class="header-actions">
+        <span id="ai-pill" class="status-pill is-muted" role="status">Checking Ollama…</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow accent">AI-assisted faculty discovery</p>
+        <h1 id="hero-title">Find undergraduate research opportunities across a university.</h1>
+        <p class="hero-lede">
+          Enter a department, faculty directory, laboratory, or faculty profile URL.
+          The crawler discovers faculty across the university and linked academic sites,
+          collects research and publication information, and uses a locally hosted
+          Ollama model to assess publicly available undergraduate research opportunities.
+        </p>
+        <ul class="hero-points" aria-label="What the application does">
+          <li><span>01</span> Broad, relevance-scored academic crawl</li>
+          <li><span>02</span> Sourced faculty research profiles</li>
+          <li><span>03</span> Evidence-grounded opportunity assessments</li>
+        </ul>
+      </div>
+
+      <div class="scan-card">
+        <form id="scan-form" novalidate>
+          <label class="field-label" for="url">University webpage URL</label>
+          <div class="url-row">
+            <input id="url" name="url" type="url" inputmode="url" autocomplete="url"
+                   placeholder="https://www.cs.odu.edu/" spellcheck="false" required
+                   aria-describedby="url-help">
+            <button id="run-button" class="button primary" type="submit">
+              <span class="button-label">Run Scan</span>
+            </button>
+          </div>
+          <p id="url-help" class="field-help">
+            Paste a department page, faculty directory, professor profile, lab, or research center.
+          </p>
+
+          <details id="advanced-settings" class="settings">
+            <summary>Crawl settings</summary>
+            <div class="settings-grid">
+              <label>
+                <span>Crawl depth</span>
+                <input id="max_depth" type="number" min="0" max="6" step="1" value="3">
+              </label>
+              <label>
+                <span>Maximum pages</span>
+                <input id="max_pages" type="number" min="1" max="500" step="1" value="100">
+              </label>
+              <label>
+                <span>External domains</span>
+                <input id="max_external_domains" type="number" min="0" max="100" step="1" value="20">
+              </label>
+              <label>
+                <span>Request delay (seconds)</span>
+                <input id="request_delay" type="number" min="0" max="5" step="0.1" value="1">
+              </label>
+            </div>
+          </details>
+
+          <div id="form-error" class="alert alert-error hidden" role="alert"></div>
+        </form>
+        <p class="privacy-note">Runs locally. Crawl data never leaves your machine.</p>
+      </div>
+    </section>
+
+    <section id="ai-banner" class="alert alert-warning hidden" aria-live="polite">
+      <div>
+        <strong id="ai-banner-title">Ollama is not ready</strong>
+        <p id="ai-banner-message"></p>
+        <ul id="ai-banner-instructions" class="setup-list"></ul>
+        <p class="small-note">Crawling, JSON, and PDF generation still work. AI analysis can be retried later.</p>
+      </div>
+    </section>
+
+    <section id="progress-section" class="panel progress-panel hidden" aria-labelledby="progress-title">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Active scan</p>
+          <h2 id="progress-title">Scan progress</h2>
+        </div>
+        <span id="progress-percent" class="progress-percent">0%</span>
+      </div>
+      <p id="progress-status" class="progress-status">Initializing…</p>
+      <div class="progress-track" role="progressbar" aria-label="Scan progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <span id="progress-bar"></span>
+      </div>
+      <div class="counter-grid">
+        <div><span class="counter-value" id="counter-pages">0</span><span class="counter-label">Pages</span></div>
+        <div><span class="counter-value" id="counter-professors">0</span><span class="counter-label">Professors</span></div>
+        <div><span class="counter-value" id="counter-publications">0</span><span class="counter-label">Publications</span></div>
+        <div><span class="counter-value" id="counter-analyzed">0</span><span class="counter-label">AI analyses</span></div>
+        <div><span class="counter-value" id="counter-warnings">0</span><span class="counter-label">Warnings</span></div>
+        <div><span class="counter-value" id="counter-errors">0</span><span class="counter-label">Errors</span></div>
+      </div>
+      <ol id="stage-list" class="stage-list" aria-label="Scan stages"></ol>
+      <p id="progress-ai-note" class="small-note"></p>
+    </section>
+
+    <section id="results-section" class="results hidden" aria-labelledby="results-title">
+      <div class="results-header">
+        <div>
+          <p class="eyebrow">Scan report</p>
+          <h2 id="results-title">Results dashboard</h2>
+          <p id="results-url" class="results-url"></p>
+          <p id="results-meta" class="results-meta"></p>
+        </div>
+        <div class="download-actions">
+          <a id="download-json" class="button secondary" href="#" hidden>Download JSON</a>
+          <a id="download-pdf" class="button secondary" href="#" hidden>Download PDF</a>
+        </div>
+      </div>
+
+      <div id="results-ai-banner" class="alert alert-warning hidden">
+        <div>
+          <strong id="results-ai-title">AI analysis incomplete</strong>
+          <p id="results-ai-message"></p>
+          <ul id="results-ai-instructions" class="setup-list"></ul>
+          <button id="retry-ai-button" class="button small primary" type="button">Retry AI analysis</button>
+        </div>
+      </div>
+
+      <div id="summary-grid" class="summary-grid" aria-label="Summary statistics"></div>
+
+      <div class="toolbar" aria-label="Filter results">
+        <label class="search-field">
+          <span class="sr-only">Search by professor name</span>
+          <input id="search" type="search" placeholder="Search professor name" autocomplete="off">
+        </label>
+        <label>
+          <span class="sr-only">Filter by opportunity category</span>
+          <select id="category-filter">
+            <option value="all">All categories</option>
+            <option value="1">Confirmed open position</option>
+            <option value="2">Actively recruiting</option>
+            <option value="3">Potential opportunity</option>
+            <option value="4">No information found</option>
+            <option value="none">Not analyzed</option>
+          </select>
+        </label>
+        <label>
+          <span class="sr-only">Filter by research interest</span>
+          <input id="interest-filter" type="search" placeholder="Filter research interest" autocomplete="off">
+        </label>
+        <label>
+          <span class="sr-only">Sort results</span>
+          <select id="sort-select">
+            <option value="confidence-desc">Confidence: high to low</option>
+            <option value="confidence-asc">Confidence: low to high</option>
+            <option value="name">Professor name</option>
+            <option value="category">Opportunity category</option>
+          </select>
+        </label>
+      </div>
+      <p id="result-count" class="result-count" aria-live="polite"></p>
+      <div id="professor-list" class="professor-list"></div>
+      <p id="empty-results" class="empty-state hidden">No professors match the current filters.</p>
+    </section>
+
+    <section class="history panel" aria-labelledby="history-title">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Local history</p>
+          <h2 id="history-title">Previous scans</h2>
+        </div>
+        <button id="refresh-history" class="button ghost small" type="button">Refresh</button>
+      </div>
+      <div id="history-list" class="history-list">
+        <p class="empty-state">No scans yet. Start with a university URL above.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <p>University Research Discovery · Local crawler · Ollama analysis · ReportLab reports</p>
+      <p class="small-note">Public information only. Always verify opportunities directly with faculty.</p>
+    </div>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
